@@ -16,12 +16,12 @@ const seedAdmin = async () => {
       return false;
     }
 
-    if (rawPassword.length < 12) {
-      console.warn('[SEED] ADMIN_PASSWORD must contain at least 12 characters. Admin was not created.');
+    if (rawPassword.length < 8) {
+      console.warn('[SEED] ADMIN_PASSWORD must contain at least 8 characters. Admin was not created or updated.');
       return false;
     }
 
-    const existingAdmin = await Admin.findOne({ email });
+    const existingAdmin = await Admin.findOne({ role: 'admin' }).select('+password');
     if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
       await Admin.create({
@@ -32,7 +32,21 @@ const seedAdmin = async () => {
       });
       console.log(`[SEED] Created default admin user: ${email}`);
     } else {
-      console.log(`[SEED] Admin user already exists: ${email}`);
+      const passwordMatches = await bcrypt.compare(rawPassword, existingAdmin.password);
+      const credentialsChanged =
+        existingAdmin.name !== name ||
+        existingAdmin.email !== email ||
+        !passwordMatches;
+
+      if (credentialsChanged) {
+        existingAdmin.name = name;
+        existingAdmin.email = email;
+        existingAdmin.password = await bcrypt.hash(rawPassword, 10);
+        await existingAdmin.save();
+        console.log(`[SEED] Updated admin credentials: ${email}`);
+      } else {
+        console.log(`[SEED] Admin credentials are current: ${email}`);
+      }
     }
     return true;
   } catch (err) {

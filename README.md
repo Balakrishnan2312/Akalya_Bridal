@@ -55,7 +55,7 @@ CLIENT_URL=http://localhost:5000
 SEED_SAMPLE_CONTENT=false
 ```
 
-> **Note**: Admin login credentials are strictly configured via environment variables (`ADMIN_EMAIL` and `ADMIN_PASSWORD`) and seeded on the first database-backed server launch. `ADMIN_PASSWORD` must contain at least 12 characters. Never hardcode credentials in source code.
+> **Note**: Admin login credentials are strictly configured via environment variables (`ADMIN_EMAIL` and `ADMIN_PASSWORD`) and synchronized with the database-backed admin account at server startup. `ADMIN_PASSWORD` must contain at least 8 characters. Never hardcode credentials in source code.
 
 ### 4. Running the Application
 Start the Node.js Express server:
