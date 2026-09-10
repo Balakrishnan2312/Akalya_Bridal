@@ -146,7 +146,7 @@
       font-size: 0.9rem;
     }
     
-    input[type="text"], input[type="email"], input[type="tel"], select, textarea {
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="time"], select, textarea {
       width: 100%;
       padding: 12px 16px;
       border: 1px solid rgba(200, 155, 109, 0.3);
@@ -158,7 +158,7 @@
       transition: all 0.3s ease;
     }
     
-    input[type="text"]:focus, select:focus, input[type="time"]:focus, textarea:focus {
+    input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, input[type="number"]:focus, select:focus, input[type="time"]:focus, textarea:focus {
       border-color: var(--rosegold);
       box-shadow: 0 0 8px rgba(200, 155, 109, 0.2);
     }
@@ -916,8 +916,9 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="mobile.css">
 </head>
-<body>
+<body class="admin-dashboard-page">
 
   <div class="dashboard-container">
     <header>

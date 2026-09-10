@@ -456,10 +456,10 @@ function renderDressGrid() {
               <span class="font-display text-sm md:text-base font-bold text-rosegold">${formattedPrice}</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button type="button" onclick="openDressDetailModal('${dressId}')" class="px-2.5 py-2 border border-sand hover:border-rosegold text-charcoal rounded-xl text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer" title="View Details">
+              <button type="button" onclick="openDressDetailModal('${dressId}')" class="px-2.5 py-2 border border-sand hover:border-rosegold text-charcoal rounded-xl text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer" title="View Details" aria-label="View details for ${safeName}">
                 <i class="bx bx-show text-base text-rosegold"></i> <span class="hidden xs:inline">Details</span>
               </button>
-              <button type="button" onclick="addToCart('${dressId}')" class="btn-gold text-xs py-2 px-3 rounded-xl flex items-center gap-1 shadow-sm hover:shadow-md cursor-pointer">
+              <button type="button" onclick="addToCart('${dressId}')" class="btn-gold text-xs py-2 px-3 rounded-xl flex items-center gap-1 shadow-sm hover:shadow-md cursor-pointer" aria-label="Add ${safeName} to cart">
                 <i class="bx bx-shopping-bag text-base"></i> Add
               </button>
             </div>
@@ -580,6 +580,16 @@ function updateCartBadgeAndUI() {
 
 // Product Details Modal Control
 let currentDetailDressId = null;
+const activePageOverlays = new Set();
+
+function setPageOverlayState(name, isOpen) {
+  if (isOpen) activePageOverlays.add(name);
+  else activePageOverlays.delete(name);
+  document.body.classList.toggle('modal-open', activePageOverlays.size > 0);
+}
+
+window.setPageOverlayState = setPageOverlayState;
+
 function openDressDetailModal(dressId) {
   const dress = allDressesList.find(d => (d.id === dressId || d._id === dressId));
   if (!dress) return;
@@ -604,22 +614,26 @@ function openDressDetailModal(dressId) {
   if (qtyInput) qtyInput.value = 1;
 
   modal.classList.remove('hidden');
+  setPageOverlayState('dress-detail', true);
 }
 
 function closeDressDetailModal() {
   const modal = document.getElementById('dress-detail-modal');
   if (modal) modal.classList.add('hidden');
+  setPageOverlayState('dress-detail', false);
 }
 
 // Cart Drawer Controls
 function openCartDrawer() {
   const cartModal = document.getElementById('cart-modal');
   if (cartModal) cartModal.classList.remove('hidden');
+  setPageOverlayState('cart', true);
 }
 
 function closeCartDrawer() {
   const cartModal = document.getElementById('cart-modal');
   if (cartModal) cartModal.classList.add('hidden');
+  setPageOverlayState('cart', false);
 }
 
 // Checkout Modal Controls
@@ -657,11 +671,13 @@ function openCheckoutModal() {
   }
 
   checkoutModal.classList.remove('hidden');
+  setPageOverlayState('checkout', true);
 }
 
 function closeCheckoutModal() {
   const checkoutModal = document.getElementById('checkout-modal');
   if (checkoutModal) checkoutModal.classList.add('hidden');
+  setPageOverlayState('checkout', false);
 }
 
 // Expose functions globally
@@ -717,6 +733,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeDetailBtn = document.getElementById('close-dress-detail-modal');
   if (closeDetailBtn) closeDetailBtn.addEventListener('click', closeDressDetailModal);
 
+  const detailModal = document.getElementById('dress-detail-modal');
+  if (detailModal) {
+    detailModal.addEventListener('click', event => {
+      if (event.target === detailModal) closeDressDetailModal();
+    });
+  }
+
   const qtyMinusBtn = document.getElementById('detail-qty-minus');
   const qtyPlusBtn = document.getElementById('detail-qty-plus');
   const qtyInput = document.getElementById('detail-qty-input');
@@ -751,11 +774,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (openCartBtn) openCartBtn.addEventListener('click', openCartDrawer);
   if (closeCartBtn) closeCartBtn.addEventListener('click', closeCartDrawer);
 
+  const cartModal = document.getElementById('cart-modal');
+  if (cartModal) {
+    cartModal.addEventListener('click', event => {
+      if (event.target === cartModal) closeCartDrawer();
+    });
+  }
+
   // Checkout Modal Events
   const proceedCheckoutBtn = document.getElementById('proceed-checkout-btn');
   const closeCheckoutBtn = document.getElementById('close-checkout-modal');
   if (proceedCheckoutBtn) proceedCheckoutBtn.addEventListener('click', openCheckoutModal);
   if (closeCheckoutBtn) closeCheckoutBtn.addEventListener('click', closeCheckoutModal);
+
+  const checkoutModal = document.getElementById('checkout-modal');
+  if (checkoutModal) {
+    checkoutModal.addEventListener('click', event => {
+      if (event.target === checkoutModal) closeCheckoutModal();
+    });
+  }
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    const checkoutModal = document.getElementById('checkout-modal');
+    const detailModal = document.getElementById('dress-detail-modal');
+    const cartModal = document.getElementById('cart-modal');
+
+    if (checkoutModal && !checkoutModal.classList.contains('hidden')) closeCheckoutModal();
+    else if (detailModal && !detailModal.classList.contains('hidden')) closeDressDetailModal();
+    else if (cartModal && !cartModal.classList.contains('hidden')) closeCartDrawer();
+  });
 
   const checkoutForm = document.getElementById('checkout-form');
   if (checkoutForm) {

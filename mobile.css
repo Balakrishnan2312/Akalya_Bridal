@@ -1,0 +1,511 @@
+/* Shared mobile refinements for the public site and admin screens. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 88px;
+}
+
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+body.modal-open .whatsapp-fab,
+body.modal-open .instagram-fab,
+body.modal-open #backToTop {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  button,
+  .btn,
+  .btn-gold,
+  .back-link {
+    touch-action: manipulation;
+  }
+
+  /* Home page navigation */
+  .home-page #navbar {
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: 10px;
+  }
+
+  .home-page .navbar-inner {
+    gap: 7px;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .home-page .brand-status {
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 8px !important;
+  }
+
+  .home-page .brand-status > a {
+    flex: 0 0 auto;
+    font-size: 1.08rem !important;
+    white-space: nowrap;
+  }
+
+  .home-page #top-store-status {
+    min-width: 0;
+    max-width: 92px !important;
+    overflow: hidden;
+    padding: 7px 9px !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: .66rem !important;
+  }
+
+  .home-page .nav-actions {
+    flex: 0 0 auto;
+    gap: 6px !important;
+  }
+
+  .home-page #open-cart-btn,
+  .home-page #menu-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .home-page #open-cart-btn {
+    justify-content: center;
+    padding: 9px 10px !important;
+  }
+
+  .home-page #mobile-menu {
+    width: min(90vw, 360px);
+    height: 100dvh;
+    overflow-y: auto;
+    padding-top: max(28px, env(safe-area-inset-top));
+    padding-bottom: max(28px, env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+
+  .home-page #mobile-menu [data-nav-mobile],
+  .home-page #mobile-bridal-services-toggle,
+  .home-page #mobile-bridal-services-menu a {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .home-page #menu-close {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Home page hero */
+  .home-page #hero {
+    min-height: 100svh !important;
+    padding-bottom: max(36px, env(safe-area-inset-bottom));
+  }
+
+  .home-page #hero > .relative {
+    padding-top: clamp(8rem, 22vh, 10rem) !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .home-page #hero h1 {
+    font-size: clamp(2.35rem, 12vw, 3.2rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  .home-page #hero .hero-kicker {
+    font-size: .68rem !important;
+    letter-spacing: .2em !important;
+    line-height: 1.55;
+  }
+
+  .home-page #hero .hero-tagline {
+    font-size: clamp(1.15rem, 6vw, 1.45rem) !important;
+    line-height: 1.35;
+  }
+
+  .home-page #hero .hero-description {
+    font-size: .9rem !important;
+    line-height: 1.7;
+  }
+
+  .home-page #hero .hero-actions {
+    width: 100%;
+  }
+
+  .home-page #hero .hero-actions a {
+    width: min(100%, 320px);
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  /* Home page sections and dynamic content */
+  .home-page #gallery-filters {
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    overflow-x: auto;
+    padding: 0 4px 9px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-page #gallery-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-page #gallery-filters button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    scroll-snap-align: start;
+  }
+
+  .home-page .dress-card button {
+    min-height: 44px;
+  }
+
+  .home-page #about img {
+    height: min(420px, 115vw) !important;
+  }
+
+  .home-page #contact iframe {
+    height: 320px !important;
+  }
+
+  .home-page #booking form {
+    gap: 1.5rem !important;
+    padding: 1.25rem !important;
+    border-radius: 22px !important;
+  }
+
+  .home-page .whatsapp-fab,
+  .home-page .instagram-fab {
+    left: 14px !important;
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .home-page .whatsapp-fab {
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .home-page .instagram-fab {
+    bottom: calc(max(14px, env(safe-area-inset-bottom)) + 60px) !important;
+  }
+
+  .home-page #backToTop {
+    right: 14px !important;
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .home-page #cart-modal > div {
+    width: 100vw !important;
+    height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .home-page #dress-detail-modal,
+  .home-page #checkout-modal,
+  .home-page #cart-modal {
+    z-index: 2100 !important;
+  }
+
+  .home-page #dress-detail-modal,
+  .home-page #checkout-modal {
+    align-items: stretch !important;
+    padding: 0 !important;
+    overscroll-behavior: contain;
+  }
+
+  .home-page #dress-detail-modal > div,
+  .home-page #checkout-modal > div {
+    width: 100%;
+    max-width: none !important;
+    max-height: none !important;
+    height: 100dvh;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    border-radius: 0 !important;
+    padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .home-page #dress-detail-modal .aspect-square {
+    aspect-ratio: auto !important;
+    height: min(42dvh, 360px);
+  }
+
+  .home-page #close-dress-detail-modal,
+  .home-page #close-checkout-modal {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Service and boutique pages */
+  .service-page .container {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .service-page .header-nav {
+    margin-bottom: 30px;
+  }
+
+  .service-page .back-link {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .service-page .hero {
+    gap: 30px;
+    padding-bottom: 38px;
+  }
+
+  .service-page .hero-title {
+    margin-bottom: 24px;
+  }
+
+  .service-page .hero-title .text-white {
+    font-size: clamp(2.45rem, 12vw, 3.45rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  .service-page .hero-title .cursive-word {
+    font-size: clamp(3.15rem, 16vw, 4.6rem) !important;
+    line-height: .95 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .service-page .hero-card,
+  .service-page .collection-card {
+    border-radius: 22px;
+  }
+
+  .service-page .makeup-types-grid {
+    gap: 10px;
+  }
+
+  .service-page .makeup-type-item {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 15px;
+  }
+
+  .service-page .btn {
+    min-height: 48px;
+  }
+
+  .service-page .collection-section {
+    padding-top: 52px;
+  }
+
+  /* Admin sign-in */
+  .admin-login-page {
+    min-height: 100dvh;
+    padding: max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .admin-login-page .login-container {
+    width: 100%;
+    padding: 30px 20px;
+    border-radius: 22px;
+  }
+
+  .admin-login-page button[type="submit"] {
+    min-height: 50px;
+  }
+
+  /* Admin dashboard */
+  .admin-dashboard-page .dashboard-container {
+    padding: 14px 12px 30px;
+  }
+
+  .admin-dashboard-page .dashboard-container > header {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .admin-dashboard-page .dashboard-container > header h1 {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+  }
+
+  .admin-dashboard-page .header-controls,
+  .admin-dashboard-page .header-controls > * {
+    width: 100%;
+  }
+
+  .admin-dashboard-page .header-controls {
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .admin-dashboard-page .header-controls button,
+  .admin-dashboard-page .header-controls .status-card {
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .admin-dashboard-page #admin-booking-toggle-btn {
+    width: 100%;
+  }
+
+  .admin-dashboard-page .cards {
+    gap: 12px;
+  }
+
+  .admin-dashboard-page .card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .admin-dashboard-page #dress-upload-form > div:first-child {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .admin-dashboard-page .drop-zone {
+    padding: 26px 14px;
+  }
+
+  .admin-dashboard-page .preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-page .booking-controls-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-dashboard-page .booking-controls-bar > *,
+  .admin-dashboard-page .booking-controls-bar input,
+  .admin-dashboard-page .booking-controls-bar select {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px;
+  }
+
+  .admin-dashboard-page .mode-toggle-group,
+  .admin-dashboard-page .pagination-bar,
+  .admin-dashboard-page .pagination-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard-page .mode-toggle-group button,
+  .admin-dashboard-page .pagination-buttons button {
+    flex: 1 1 120px;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-page .pagination-bar {
+    gap: 12px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .admin-dashboard-page .booking-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .admin-dashboard-page .stat-card {
+    padding: 16px 10px;
+  }
+
+  .admin-dashboard-page .table-responsive {
+    border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-page .booking-table {
+    min-width: 720px;
+  }
+
+  .admin-dashboard-page .modal-overlay {
+    align-items: flex-start;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  .admin-dashboard-page .modal-card {
+    max-height: calc(100dvh - 20px);
+    padding: 20px 16px;
+    border-radius: 18px;
+    overflow-y: auto;
+  }
+
+  .admin-dashboard-page .detail-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .admin-dashboard-page .detail-row strong {
+    width: auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .home-page #top-store-status {
+    display: none !important;
+  }
+
+  .home-page #hero h1 {
+    font-size: 2.25rem !important;
+  }
+
+  .admin-dashboard-page .booking-stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (hover: none) {
+  .service-page .hero-card:hover,
+  .service-page .collection-card:hover,
+  .home-page .dress-card:hover,
+  .home-page .gallery-item:hover {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

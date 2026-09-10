@@ -1091,7 +1091,7 @@
         min-height: 80vh !important;
       }
 
-      #hero .hero-line {
+      #hero .hero-kicker {
         font-size: 0.7rem !important;
         letter-spacing: 0.25em !important;
       }
@@ -1167,9 +1167,10 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="mobile.css">
 </head>
 
-<body class="bg-ivory text-charcoal font-body antialiased">
+<body class="home-page bg-ivory text-charcoal font-body antialiased">
 
   <!-- ================= LOADER ================= -->
   <div id="loader">
@@ -1184,8 +1185,8 @@
 
   <!-- ================= NAVBAR ================= -->
   <header id="navbar">
-    <div class="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
-      <div class="flex items-center gap-4 z-10">
+    <div class="navbar-inner max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
+      <div class="brand-status flex items-center gap-4 z-10">
         <a href="#home" class="font-display text-xl md:text-2xl tracking-wide flex items-center gap-2">
           <span class="text-rosegold">A</span>kalya<span class="text-rosegold">'</span>s
           <span class="hidden sm:inline text-[.65rem] tracking-[.25em] font-body uppercase text-charcoal/50 ml-1">Bridal
@@ -1203,7 +1204,7 @@
         <a href="#home" class="nav-pill active" data-nav>Home</a>
         <a href="#about" class="nav-pill" data-nav>About</a>
         <div class="nav-dropdown" id="bridal-services-dropdown">
-          <button type="button" class="nav-pill" id="bridal-services-toggle">Services</button>
+          <button type="button" class="nav-pill" id="bridal-services-toggle" aria-controls="bridal-services-menu" aria-expanded="false">Services</button>
           <div class="nav-dropdown-menu" id="bridal-services-menu">
             <a href="bridal.html">Bridal Makeup</a>
             <a href="parlours.html">Parlours</a>
@@ -1217,9 +1218,9 @@
         <a href="#contact" class="nav-pill" data-nav>Contact</a>
       </nav>
 
-      <div class="flex items-center gap-3">
+      <div class="nav-actions flex items-center gap-3">
         <!-- Shopping Cart Trigger Button -->
-        <button id="open-cart-btn" class="nav-glass px-4 py-2 rounded-full flex items-center gap-2 text-sm font-semibold text-charcoal hover:text-rosegold transition-all duration-300 relative shadow-sm cursor-pointer" title="View Shopping Cart">
+        <button id="open-cart-btn" class="nav-glass px-4 py-2 rounded-full flex items-center gap-2 text-sm font-semibold text-charcoal hover:text-rosegold transition-all duration-300 relative shadow-sm cursor-pointer" title="View Shopping Cart" aria-label="View shopping cart">
           <i class="bx bx-shopping-bag text-xl text-rosegold"></i>
           <span class="hidden sm:inline">Cart</span>
           <span id="cart-badge-count" class="bg-rosegold text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">0</span>
@@ -1228,7 +1229,7 @@
         <a href="#booking" class="hidden lg:inline-flex btn-gold btn-ripple text-sm py-3 px-7">Book Appointment</a>
       </div>
 
-      <button id="menu-btn"
+      <button id="menu-btn" aria-label="Open navigation menu" aria-controls="mobile-menu" aria-expanded="false"
         class="lg:hidden z-10 w-11 h-11 rounded-full nav-glass flex items-center justify-center text-xl">
         <i class="bx bx-menu"></i>
       </button>
@@ -1237,16 +1238,16 @@
 
   <!-- Mobile Menu -->
   <div id="menu-overlay"></div>
-  <aside id="mobile-menu" class="px-8 py-10 flex flex-col">
+  <aside id="mobile-menu" class="px-8 py-10 flex flex-col" aria-hidden="true" inert>
     <div class="flex justify-between items-center mb-14">
       <span class="font-display text-2xl text-champagne">Menu</span>
-      <button id="menu-close" class="text-white text-3xl leading-none"><i class="bx bx-x"></i></button>
+      <button id="menu-close" class="text-white text-3xl leading-none" aria-label="Close navigation menu"><i class="bx bx-x"></i></button>
     </div>
     <nav class="flex flex-col gap-6 text-lg" id="mobile-nav">
       <a href="#home" class="text-white/85 hover:text-champagne transition" data-nav-mobile>Home</a>
       <a href="#about" class="text-white/85 hover:text-champagne transition" data-nav-mobile>About</a>
       <button type="button" class="text-left text-white/85 hover:text-champagne transition"
-        id="mobile-bridal-services-toggle">Services</button>
+        id="mobile-bridal-services-toggle" aria-controls="mobile-bridal-services-menu" aria-expanded="false">Services</button>
       <div class="pl-4 flex flex-col gap-3 text-sm text-white/70 hidden" id="mobile-bridal-services-menu">
         <a href="bridal.html" class="hover:text-champagne transition">Bridal Makeup</a>
         <a href="parlours.html" class="hover:text-champagne transition">Parlours</a>
@@ -1260,7 +1261,8 @@
     </nav>
     <a href="#booking" class="btn-gold text-center mt-12">Book Appointment</a>
     <div class="mt-auto flex gap-5 text-white/70 text-xl pt-10">
-      <i class='bx bxl-instagram'></i><i class='bx bxl-facebook'></i><i class='bx bxl-whatsapp'></i>
+      <a href="https://www.instagram.com/akalya_mekover_artist?igsh=c2Nxa3F5YmJlbHN1" target="_blank" rel="noopener noreferrer" aria-label="Akalya's Bridal Studio on Instagram"><i class='bx bxl-instagram'></i></a>
+      <a href="https://wa.me/919360728730" target="_blank" rel="noopener noreferrer" aria-label="Contact Akalya's Bridal Studio on WhatsApp"><i class='bx bxl-whatsapp'></i></a>
     </div>
   </aside>
 
@@ -1274,19 +1276,19 @@
         <div class="hero-float floaty" style="width:90px;height:90px;top:40%;right:18%;animation-delay:1s;"></div>
 
         <div class="relative z-10 max-w-5xl mx-auto text-center px-6 pt-28">
-          <p class="hero-line text-champagne uppercase tracking-[.35em] text-xs md:text-sm mb-6 font-body">Luxury Bridal
+          <p class="hero-line hero-kicker text-champagne uppercase tracking-[.35em] text-xs md:text-sm mb-6 font-body">Luxury Bridal
             Artistry &amp; Styling</p>
           <h1 class="font-display text-white leading-[1.05] text-[2.6rem] md:text-6xl lg:text-7xl">
             <span class="hero-line block">Akalya's</span>
             <span class="hero-line block italic text-champagne">Bridal Studio</span>
           </h1>
-          <p class="hero-line font-accent italic text-white/85 text-xl md:text-2xl mt-7">"Where Beauty Meets Elegance"
+          <p class="hero-line hero-tagline font-accent italic text-white/85 text-xl md:text-2xl mt-7">"Where Beauty Meets Elegance"
           </p>
-          <p class="hero-line text-white/70 max-w-xl mx-auto mt-6 text-sm md:text-base leading-relaxed">
+          <p class="hero-line hero-description text-white/70 max-w-xl mx-auto mt-6 text-sm md:text-base leading-relaxed">
             Bespoke bridal makeup, hair styling and draping crafted with premium products, gentle hands
             and an artist's eye — so every bride feels unmistakably like herself, only luminous.
           </p>
-          <div class="hero-line flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+          <div class="hero-line hero-actions flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
             <a href="#booking" class="btn-gold btn-ripple w-full sm:w-auto text-center">Book Appointment</a>
           </div>
         </div>
@@ -1815,11 +1817,15 @@
     const mobileBridalToggle = document.getElementById('mobile-bridal-services-toggle');
     const mobileBridalMenu = document.getElementById('mobile-bridal-services-menu');
 
-    function closeBridalDropdown() { if (bridalDropdown) bridalDropdown.classList.remove('open'); }
+    function closeBridalDropdown() {
+      if (bridalDropdown) bridalDropdown.classList.remove('open');
+      if (bridalToggle) bridalToggle.setAttribute('aria-expanded', 'false');
+    }
     if (bridalToggle && bridalMenu) {
       bridalToggle.addEventListener('click', e => {
         e.stopPropagation();
-        bridalDropdown.classList.toggle('open');
+        const isOpen = bridalDropdown.classList.toggle('open');
+        bridalToggle.setAttribute('aria-expanded', String(isOpen));
       });
       bridalMenu.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => closeBridalDropdown());
@@ -1829,7 +1835,10 @@
       if (bridalDropdown && !bridalDropdown.contains(e.target)) closeBridalDropdown();
     });
     if (mobileBridalToggle && mobileBridalMenu) {
-      mobileBridalToggle.addEventListener('click', () => mobileBridalMenu.classList.toggle('hidden'));
+      mobileBridalToggle.addEventListener('click', () => {
+        const isOpen = mobileBridalMenu.classList.toggle('hidden') === false;
+        mobileBridalToggle.setAttribute('aria-expanded', String(isOpen));
+      });
     }
 
     /* ================= ACTIVE NAV LINK ================= */
@@ -1851,11 +1860,31 @@
     const menuClose = document.getElementById('menu-close');
     const mobileMenu = document.getElementById('mobile-menu');
     const menuOverlay = document.getElementById('menu-overlay');
-    function openMobileMenu() { mobileMenu.classList.add('open'); menuOverlay.classList.add('show'); }
-    function closeMobileMenu() { mobileMenu.classList.remove('open'); menuOverlay.classList.remove('show'); }
+    function openMobileMenu() {
+      mobileMenu.classList.add('open');
+      menuOverlay.classList.add('show');
+      mobileMenu.removeAttribute('inert');
+      mobileMenu.setAttribute('aria-hidden', 'false');
+      menuBtn.setAttribute('aria-expanded', 'true');
+      if (window.setPageOverlayState) window.setPageOverlayState('mobile-menu', true);
+      else document.body.classList.add('modal-open');
+      menuClose.focus();
+    }
+    function closeMobileMenu() {
+      mobileMenu.classList.remove('open');
+      menuOverlay.classList.remove('show');
+      mobileMenu.setAttribute('inert', '');
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      menuBtn.setAttribute('aria-expanded', 'false');
+      if (window.setPageOverlayState) window.setPageOverlayState('mobile-menu', false);
+      else document.body.classList.remove('modal-open');
+    }
     menuBtn.addEventListener('click', openMobileMenu);
     menuClose.addEventListener('click', closeMobileMenu);
     menuOverlay.addEventListener('click', closeMobileMenu);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && mobileMenu.classList.contains('open')) closeMobileMenu();
+    });
 
     /* ================= CURSOR GLOW ================= */
     const glow = document.getElementById('cursor-glow');
@@ -1882,7 +1911,7 @@
   <!-- ================= DRESS DETAIL MODAL ================= -->
   <div id="dress-detail-modal" class="fixed inset-0 z-50 bg-charcoal/70 backdrop-blur-md hidden flex items-center justify-center p-4 md:p-6 overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative my-auto border border-sand/30">
-      <button id="close-dress-detail-modal" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-charcoal/10 hover:bg-charcoal/20 text-charcoal flex items-center justify-center text-xl transition-all">
+      <button id="close-dress-detail-modal" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-charcoal/10 hover:bg-charcoal/20 text-charcoal flex items-center justify-center text-xl transition-all" aria-label="Close dress details">
         <i class="bx bx-x"></i>
       </button>
       <div class="grid grid-cols-1 md:grid-cols-2">
@@ -1926,7 +1955,7 @@
             <p id="cart-item-count-label" class="text-xs text-charcoal/60">0 items selected</p>
           </div>
         </div>
-        <button id="close-cart-modal" class="w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 flex items-center justify-center text-xl text-charcoal transition">
+        <button id="close-cart-modal" class="w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 flex items-center justify-center text-xl text-charcoal transition" aria-label="Close shopping cart">
           <i class="bx bx-x"></i>
         </button>
       </div>
@@ -1956,7 +1985,7 @@
   <!-- ================= CHECKOUT MODAL ================= -->
   <div id="checkout-modal" class="fixed inset-0 z-50 bg-charcoal/70 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl relative my-auto border border-sand/30">
-      <button id="close-checkout-modal" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 flex items-center justify-center text-xl text-charcoal transition">
+      <button id="close-checkout-modal" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-charcoal/5 hover:bg-charcoal/10 flex items-center justify-center text-xl text-charcoal transition" aria-label="Close checkout">
         <i class="bx bx-x"></i>
       </button>
 

@@ -84,7 +84,7 @@ If the frontend is deployed separately from the Express server, set `API_BASE_UR
 
 1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
 2. Under **Database Access**, create a database user with read/write permissions.
-3. Under **Network Access**, add IP `0.0.0.0/0` (or your server's IP address).
+3. Under **Network Access**, allow only the IP address or CIDR ranges used by your server. For Render, copy the service's ranges from **Connect → Outbound** in the Render dashboard. Using `0.0.0.0/0` is convenient for a short test, but it exposes the database endpoint to every source IP and should not be the long-term setting.
 4. Copy the connection string and paste it as `MONGODB_URI` in `.env`.
 
 ---
@@ -141,19 +141,23 @@ If the frontend is deployed separately from the Express server, set `API_BASE_UR
 ### Deploying to Render
 1. Push your repository to GitHub.
 2. Create a new **Web Service** on Render connected to your repository.
-3. Set **Build Command**: `npm install`
+3. Set **Build Command**: `npm ci`
 4. Set **Start Command**: `npm start`
 5. Under **Environment Variables**, set:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
+   - `MONGODB_URI` (an Atlas `mongodb+srv://...` value — do not use the local `mongodb://127.0.0.1:27017/...` value)
+   - `JWT_SECRET` (a new random value with at least 32 characters)
    - `JWT_EXPIRES_IN`
    - `ADMIN_NAME`
    - `ADMIN_EMAIL`
    - `ADMIN_PASSWORD`
-   - `CLIENT_URL` (the deployed website origin)
-   - `PORT=5000`
+   - `CLIENT_URL` (the deployed `https://<service-name>.onrender.com` origin)
+   - `SEED_SAMPLE_CONTENT=false`
+6. Do not add a `PORT` variable. Render supplies it automatically and the server already reads `process.env.PORT`.
+7. After deployment, open `https://<service-name>.onrender.com/api/health`. It should report both `"server":"running"` and `"database":"connected"` before you use the admin page.
 
 Uploads do not require a Render persistent disk because their bytes are stored in MongoDB. Gallery uploads are limited to 5 MB and dress images to 8 MB; MongoDB documents have a 16 MB maximum size.
+
+The local database and the Atlas database are separate. Existing photos or dresses in your computer's MongoDB are not copied automatically; export/import them if you want the same records online. On Render's free web-service tier, the app can spin down after inactivity, but the Atlas data remains stored and appears again when the service wakes.
 
 ## ❓ Troubleshooting & Direct File Access
 
