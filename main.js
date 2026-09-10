@@ -1,6 +1,10 @@
-const API_BASE = (window.location.port !== '5000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'))
-  ? 'http://localhost:5000'
-  : '';
+const configuredApiBase = String(window.AKALYA_CONFIG?.API_BASE_URL || '').replace(/\/$/, '');
+const API_BASE = configuredApiBase || (
+  window.location.port !== '5000' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+    ? 'http://localhost:5000'
+    : ''
+);
 
 // Add fade-in CSS animations dynamically to the page head
 const styleToken = document.createElement('style');
@@ -27,6 +31,22 @@ document.head.appendChild(styleToken);
 
 let allGalleryImages = [];
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function resolveMediaUrl(value) {
+  const raw = String(value || '').trim();
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('/')) return `${API_BASE}${raw}`;
+  return raw ? `${API_BASE}/${raw}` : '';
+}
+
 // ================= RENDER DYNAMIC GALLERY =================
 async function fetchAndRenderGallery(activeFilter = 'all') {
   const grid = document.getElementById('gallery-grid');
@@ -35,12 +55,9 @@ async function fetchAndRenderGallery(activeFilter = 'all') {
 
   try {
     const res = await fetch(`${API_BASE}/api/gallery`);
-    if (res.ok) {
-      allGalleryImages = await res.json();
-    } else {
-      const fallbackRes = await fetch(`${API_BASE}/images`);
-      allGalleryImages = await fallbackRes.json();
-    }
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.message || 'Gallery request failed.');
+    allGalleryImages = Array.isArray(payload) ? payload : [];
     console.log(`[GALLERY] Successfully loaded ${allGalleryImages.length} images.`);
     renderFilteredGrid(activeFilter);
   } catch (err) {
@@ -62,16 +79,17 @@ function renderFilteredGrid(filter = 'all') {
 
   grid.innerHTML = items.map((g, index) => {
     const rawImg = g.img || g.imageUrl || '';
-    const resolvedImg = (rawImg.startsWith('http') || rawImg.startsWith('data:')) ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+    const resolvedImg = resolveMediaUrl(rawImg);
     const fullImg = resolvedImg.includes('unsplash.com') ? resolvedImg.replace('w=900', 'w=1600') : resolvedImg;
     const animationDelay = `${(index % 8) * 0.08}s`;
+    const safeTitle = escapeHtml(g.title || 'Studio photo');
     
     return `
-      <div class="gallery-item cursor-pointer" data-full="${fullImg}" style="animation-delay: ${animationDelay};">
-        <img src="${resolvedImg}" alt="${g.title}" class="w-full h-full object-cover transition-all duration-500" loading="lazy"
+      <div class="gallery-item cursor-pointer" data-full="${escapeHtml(fullImg)}" style="animation-delay: ${animationDelay};">
+        <img src="${escapeHtml(resolvedImg)}" alt="${safeTitle}" class="w-full h-full object-cover transition-all duration-500" loading="lazy"
              onerror="this.closest('.gallery-item').style.background='linear-gradient(135deg,#D8B98A,#C89B6D)'; this.remove();">
         <div class="gallery-overlay">
-          <p class="text-white text-sm font-medium">${g.title}</p>
+          <p class="text-white text-sm font-medium">${safeTitle}</p>
         </div>
       </div>`;
   }).join('');
@@ -347,6 +365,8 @@ function setupBookingFormHandler() {
       }
     }
   });
+}
+
 // ================= DRESS SHOPPING & CART SYSTEM =================
 let allDressesList = [];
 let cartState = [];
@@ -359,7 +379,11 @@ function loadCartFromStorage() {
   try {
     const saved = localStorage.getItem('bridalCart');
     if (saved) {
-      cartState = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      cartState = Array.isArray(parsed)
+        ? parsed.filter((item) => item && item.id && Number.isFinite(Number(item.price)))
+          .map((item) => ({ ...item, qty: Math.min(99, Math.max(1, Number.parseInt(item.qty, 10) || 1)) }))
+        : [];
     }
   } catch (e) {
     cartState = [];
@@ -381,12 +405,9 @@ async function fetchAndRenderDresses() {
   console.log('[DRESSES] Fetching dresses list from /api/dresses...');
   try {
     const res = await fetch(`${API_BASE}/api/dresses`);
-    if (res.ok) {
-      allDressesList = await res.json();
-    } else {
-      const fbRes = await fetch(`${API_BASE}/dresses`);
-      allDressesList = await fbRes.json();
-    }
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.message || 'Dress catalog request failed.');
+    allDressesList = Array.isArray(payload) ? payload : [];
     console.log(`[DRESSES] Successfully loaded ${allDressesList.length} dresses.`);
     renderDressGrid();
   } catch (err) {
@@ -406,15 +427,17 @@ function renderDressGrid() {
 
   grid.innerHTML = allDressesList.map(dress => {
     const rawImg = dress.imageUrl || dress.img || '';
-    const resolvedImg = (rawImg.startsWith('http') || rawImg.startsWith('data:')) ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+    const resolvedImg = resolveMediaUrl(rawImg);
     const formattedPrice = formatINR(dress.price);
     const dressId = dress.id || dress._id;
     const descText = dress.description ? (dress.description.length > 75 ? dress.description.substring(0, 75) + '...' : dress.description) : 'Handcrafted luxury bridal wear with bespoke detailing.';
+    const safeName = escapeHtml(dress.name || 'Bridal dress');
+    const safeDescription = escapeHtml(descText);
 
     return `
       <div class="dress-card group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-sand/40 flex flex-col">
         <div class="relative aspect-[3/4] overflow-hidden bg-ivory cursor-pointer" onclick="openDressDetailModal('${dressId}')">
-          <img src="${resolvedImg}" alt="${dress.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=900&auto=format&fit=crop';">
+          <img src="${escapeHtml(resolvedImg)}" alt="${safeName}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=900&auto=format&fit=crop';">
           <div class="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 hidden md:flex">
             <button type="button" class="w-full py-2.5 bg-white/90 backdrop-blur-sm text-charcoal text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-white transition-colors cursor-pointer">
               <i class="bx bx-show text-sm align-middle mr-1"></i> Quick View
@@ -425,8 +448,8 @@ function renderDressGrid() {
           </span>
         </div>
         <div class="p-5 md:p-6 flex flex-col flex-grow">
-          <h3 onclick="openDressDetailModal('${dressId}')" class="font-display text-base md:text-lg font-semibold text-charcoal mb-2 group-hover:text-rosegold transition-colors leading-snug cursor-pointer">${dress.name}</h3>
-          <p class="text-xs text-charcoal/65 line-clamp-2 mb-4 flex-grow leading-relaxed">${descText}</p>
+          <h3 onclick="openDressDetailModal('${dressId}')" class="font-display text-base md:text-lg font-semibold text-charcoal mb-2 group-hover:text-rosegold transition-colors leading-snug cursor-pointer">${safeName}</h3>
+          <p class="text-xs text-charcoal/65 line-clamp-2 mb-4 flex-grow leading-relaxed">${safeDescription}</p>
           <div class="pt-4 border-t border-sand/30 flex items-center justify-between gap-2 mt-auto">
             <div class="flex flex-col">
               <span class="text-[0.65rem] uppercase tracking-wider text-charcoal/50 font-semibold">Price</span>
@@ -526,15 +549,16 @@ function updateCartBadgeAndUI() {
 
     itemsContainer.innerHTML = cartState.map(item => {
       const rawImg = item.imageUrl || item.img || '';
-      const resolvedImg = (rawImg.startsWith('http') || rawImg.startsWith('data:')) ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+      const resolvedImg = resolveMediaUrl(rawImg);
       const itemTotalFormatted = formatINR(item.price * item.qty);
       const itemId = item.id || item._id;
+      const safeName = escapeHtml(item.name || 'Bridal dress');
 
       return `
         <div class="flex items-center gap-4 p-3 bg-ivory rounded-2xl border border-sand/30">
-          <img src="${resolvedImg}" alt="${item.name}" class="w-16 h-16 object-cover rounded-xl border border-sand/40" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=900&auto=format&fit=crop';">
+          <img src="${escapeHtml(resolvedImg)}" alt="${safeName}" class="w-16 h-16 object-cover rounded-xl border border-sand/40" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=900&auto=format&fit=crop';">
           <div class="flex-grow">
-            <h4 class="font-display font-semibold text-sm text-charcoal line-clamp-1">${item.name}</h4>
+            <h4 class="font-display font-semibold text-sm text-charcoal line-clamp-1">${safeName}</h4>
             <span class="text-xs font-bold text-rosegold">${formatINR(item.price)}</span>
             <div class="flex items-center gap-2 mt-2">
               <div class="flex items-center border border-sand rounded-lg bg-white overflow-hidden">
@@ -571,7 +595,7 @@ function openDressDetailModal(dressId) {
   if (!modal) return;
 
   const rawImg = dress.imageUrl || dress.img || '';
-  const resolvedImg = (rawImg.startsWith('http') || rawImg.startsWith('data:')) ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+  const resolvedImg = resolveMediaUrl(rawImg);
 
   if (img) img.src = resolvedImg;
   if (title) title.textContent = dress.name;
@@ -620,7 +644,7 @@ function openCheckoutModal() {
       <div class="space-y-2 mb-3">
         ${cartState.map(i => `
           <div class="flex justify-between items-center text-xs">
-            <span class="font-medium text-charcoal">${i.name} (x${i.qty})</span>
+            <span class="font-medium text-charcoal">${escapeHtml(i.name || 'Bridal dress')} (x${i.qty})</span>
             <span class="font-bold text-rosegold">${formatINR(i.price * i.qty)}</span>
           </div>
         `).join('')}

@@ -10,8 +10,9 @@ A production-ready luxury bridal studio and beauty parlour web application built
 - **Backend Appointment Workflow**: Public booking system accepting appointment requests with validation for 10-digit Indian mobile numbers and future/today event dates.
 - **Admin Dashboard**: Secure management interface (`dashboard.html`) for viewing, filtering, searching, updating, and deleting appointment requests.
 - **Store & Booking Schedule Manager**: Configurable store operating hours and manual/automatic open & close schedule toggles.
-- **MongoDB Gallery & Store Persistence**: Full database persistence for studio photos and store configuration with automatic seeders.
-- **Secure File Uploads**: Protected image upload API using Multer with strict MIME type checking and 5 MB size limits.
+- **MongoDB Gallery & Dress Persistence**: Gallery photos, dress photos, catalog details, bookings, and store settings are persisted in MongoDB.
+- **Durable Image Uploads**: Protected Multer uploads are stored as MongoDB binary data, so images are not lost when a cloud server restarts.
+- **Live Boutique Catalog**: Dresses added in the admin dashboard appear on both the home-page shopping section and `boutique.html`.
 - **JWT Authentication & bcrypt Password Hashing**: Environment-seeded administrator authentication with session expiration handling.
 
 ---
@@ -21,7 +22,7 @@ A production-ready luxury bridal studio and beauty parlour web application built
 - **Backend**: Node.js, Express.js (CommonJS)
 - **Database**: MongoDB with Mongoose (MongoDB Atlas Compatible)
 - **Auth & Security**: JWT (jsonwebtoken), bcryptjs, CORS, Dotenv
-- **File Uploads**: Multer
+- **File Uploads**: Multer memory uploads persisted into MongoDB
 - **Frontend**: HTML5, Vanilla JavaScript (ES6+), CSS3 (Tailwind Play CDN + Custom Glassmorphism & Gold Tokens)
 
 ---
@@ -29,7 +30,7 @@ A production-ready luxury bridal studio and beauty parlour web application built
 ## 🚀 Quick Start Guide
 
 ### 1. Prerequisites
-- [Node.js](https://nodejs.org/) (v16+ recommended)
+- [Node.js](https://nodejs.org/) v20.19 or newer
 - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster URI or a local MongoDB instance running on `mongodb://127.0.0.1:27017`
 
 ### 2. Installation
@@ -51,9 +52,10 @@ ADMIN_NAME=Akalya Admin
 ADMIN_EMAIL=admin@akalyasbridal.com
 ADMIN_PASSWORD=YourStrongAdminPassword123!
 CLIENT_URL=http://localhost:5000
+SEED_SAMPLE_CONTENT=false
 ```
 
-> **Note**: Admin login credentials are strictly configured via environment variables (`ADMIN_EMAIL` and `ADMIN_PASSWORD`) and dynamically seeded on initial server launch. Never hardcode credentials in source code.
+> **Note**: Admin login credentials are strictly configured via environment variables (`ADMIN_EMAIL` and `ADMIN_PASSWORD`) and seeded on the first database-backed server launch. `ADMIN_PASSWORD` must contain at least 12 characters. Never hardcode credentials in source code.
 
 ### 4. Running the Application
 Start the Node.js Express server:
@@ -66,6 +68,15 @@ Open your browser and visit:
 - **Client Web Application**: [http://localhost:5000](http://localhost:5000)
 - **Admin Login Portal**: [http://localhost:5000/admin.html](http://localhost:5000/admin.html)
 - **Admin Dashboard**: [http://localhost:5000/dashboard.html](http://localhost:5000/dashboard.html)
+
+### 5. Add gallery photos and dresses
+
+1. Open the admin login portal and sign in with the values from your `.env` file.
+2. In **Gallery Photo Management**, select a title, category, and image, then upload it.
+3. In **Dress Shopping Management**, enter the dress name, price, description, and image, then publish it.
+4. Refresh the public home page or boutique page. Both load the latest MongoDB records through the API.
+
+If the frontend is deployed separately from the Express server, set `API_BASE_URL` in `config.js` to the public server origin and add that frontend origin to `CLIENT_URL` (or the comma-separated `CLIENT_URLS`) on the server.
 
 ---
 
@@ -99,9 +110,21 @@ Open your browser and visit:
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/gallery` | Public | Fetch all studio gallery photos (alias `/images`) |
+| `GET` | `/api/gallery/:id/image` | Public | Stream a gallery image stored in MongoDB |
 | `POST` | `/api/gallery` | Admin | Upload new photo with caption & category (alias `/upload`) |
 | `PUT` | `/api/gallery/:id` | Admin | Edit photo category or title (alias `/image/:id`) |
 | `DELETE` | `/api/gallery/:id` | Admin | Delete photo and remove uploaded file (alias `/image/:id`) |
+
+### Dress catalog (`/api/dresses`)
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/dresses` | Public | Fetch all published dress samples |
+| `GET` | `/api/dresses/:id` | Public | Fetch one dress record |
+| `GET` | `/api/dresses/:id/image` | Public | Stream a dress image stored in MongoDB |
+| `POST` | `/api/dresses` | Admin | Publish a dress with its image |
+| `PUT` | `/api/dresses/:id` | Admin | Update dress details or replace its image |
+| `DELETE` | `/api/dresses/:id` | Admin | Delete a dress and its stored image |
 
 ### Store Settings (`/api/store`)
 | Method | Endpoint | Access | Description |
@@ -127,7 +150,10 @@ Open your browser and visit:
    - `ADMIN_NAME`
    - `ADMIN_EMAIL`
    - `ADMIN_PASSWORD`
+   - `CLIENT_URL` (the deployed website origin)
    - `PORT=5000`
+
+Uploads do not require a Render persistent disk because their bytes are stored in MongoDB. Gallery uploads are limited to 5 MB and dress images to 8 MB; MongoDB documents have a 16 MB maximum size.
 
 ## ❓ Troubleshooting & Direct File Access
 

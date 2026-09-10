@@ -11,7 +11,14 @@ const protectAdmin = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
-  const jwtSecret = process.env.JWT_SECRET || 'akalyas_bridal_studio_super_secret_key_123';
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    return res.status(503).json({
+      success: false,
+      message: 'Admin authentication is not configured on the server.'
+    });
+  }
 
   try {
     const decoded = jwt.verify(token, jwtSecret);

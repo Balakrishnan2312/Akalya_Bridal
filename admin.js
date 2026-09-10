@@ -1,6 +1,10 @@
-const API_BASE = (window.location.port !== '5000' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'))
-  ? 'http://localhost:5000'
-  : '';
+const configuredApiBase = String(window.AKALYA_CONFIG?.API_BASE_URL || '').replace(/\/$/, '');
+const API_BASE = configuredApiBase || (
+  window.location.port !== '5000' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+    ? 'http://localhost:5000'
+    : ''
+);
 
 const loginForm = document.getElementById('login-form');
 
@@ -981,6 +985,7 @@ const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const filePreview = document.getElementById('file-preview');
 const fileNameSpan = document.getElementById('file-name');
+const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 if (dropZone && fileInput) {
   ['dragenter', 'dragover'].forEach(eventName => {
@@ -1018,8 +1023,14 @@ if (dropZone && fileInput) {
 }
 
 function handleFileSelect(file) {
-  if (!file.type.startsWith('image/')) {
-    showToast('Please select image files only!', true);
+  if (!supportedImageTypes.has(file.type)) {
+    showToast('Please select a JPG, PNG, WEBP, or GIF image.', true);
+    if (fileInput) fileInput.value = '';
+    if (filePreview) filePreview.style.display = 'none';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Gallery images must be 5 MB or smaller.', true);
     if (fileInput) fileInput.value = '';
     if (filePreview) filePreview.style.display = 'none';
     return;
@@ -1035,10 +1046,10 @@ async function loadCatalog() {
   if (!catalogGrid) return;
   console.log('[CATALOG] Loading catalog images from /api/gallery...');
   try {
-    let res = await fetch(`${API_BASE}/api/gallery`);
-    if (!res.ok) res = await fetch(`${API_BASE}/images`);
-
-    const images = await res.json();
+    const res = await fetch(`${API_BASE}/api/gallery`);
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.message || 'Gallery request failed.');
+    const images = Array.isArray(payload) ? payload : [];
     console.log(`[CATALOG] Received ${images.length} images.`);
     
     if (images.length === 0) {
@@ -1052,7 +1063,7 @@ async function loadCatalog() {
       const rawImg = img.img || img.imageUrl || '';
       return `
         <div class="preview-item" id="gallery-card-${imgId}">
-          <img src="${(rawImg.startsWith('http') || rawImg.startsWith('data:')) ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`}" alt="${escapeHtml(img.title)}">
+          <img src="${escapeHtml(rawImg.startsWith('http') ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`)}" alt="${escapeHtml(img.title)}">
           <div class="preview-info">
             <div class="img-title" title="${escapeHtml(img.title)}">${escapeHtml(img.title)}</div>
             
@@ -1191,13 +1202,9 @@ async function loadDressAdminCatalog() {
 
   try {
     const res = await fetch(`${API_BASE}/api/dresses`);
-    let dresses = [];
-    if (res.ok) {
-      dresses = await res.json();
-    } else {
-      const fbRes = await fetch(`${API_BASE}/dresses`);
-      dresses = await fbRes.json();
-    }
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.message || 'Dress catalog request failed.');
+    const dresses = Array.isArray(payload) ? payload : [];
 
     allAdminDresses = Array.isArray(dresses) ? dresses : [];
     console.log(`[DRESSES] Loaded ${allAdminDresses.length} dresses for admin.`);
@@ -1216,18 +1223,20 @@ async function loadDressAdminCatalog() {
       const resolvedImg = (rawImg.startsWith('http') || rawImg.startsWith('data:')) ? rawImg : `${API_BASE}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
       const priceFormatted = '₹ ' + (Number(dress.price) || 0).toLocaleString('en-IN');
       const descSnippet = dress.description ? (dress.description.length > 80 ? dress.description.substring(0, 80) + '...' : dress.description) : 'No description provided';
+      const safeName = escapeHtml(dress.name || 'Bridal dress');
+      const safeDescription = escapeHtml(descSnippet);
 
       return `
         <div class="preview-card" style="border: 1px solid rgba(200, 155, 109, 0.2); border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
           <div style="position: relative; width: 100%; height: 210px; overflow: hidden; background: #f7f5f0;">
-            <img src="${resolvedImg}" alt="${dress.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=900&auto=format&fit=crop';">
+            <img src="${escapeHtml(resolvedImg)}" alt="${safeName}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=900&auto=format&fit=crop';">
             <span style="position: absolute; top: 10px; right: 10px; background: rgba(17, 17, 17, 0.85); color: #D8B98A; font-weight: 700; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; backdrop-filter: blur(4px);">
               ${priceFormatted}
             </span>
           </div>
           <div style="padding: 16px;">
-            <h4 style="font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; color: #111;">${dress.name}</h4>
-            <p style="font-size: 0.82rem; color: #666; margin-bottom: 14px; line-height: 1.4; height: 38px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${descSnippet}</p>
+            <h4 style="font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; color: #111;">${safeName}</h4>
+            <p style="font-size: 0.82rem; color: #666; margin-bottom: 14px; line-height: 1.4; height: 38px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${safeDescription}</p>
             <div style="display: flex; gap: 8px;">
               <button type="button" onclick="openEditDressModal('${dress.id || dress._id}')" class="btn-tb-action" title="Edit Dress" style="flex: 1; width: auto; font-size: 0.82rem; font-weight: 500; height: 34px;">
                 <i class="bx bx-edit" style="margin-right: 4px;"></i> Edit
@@ -1258,7 +1267,14 @@ if (dressDropZone && dressFileInput) {
   dressDropZone.addEventListener('click', () => dressFileInput.click());
   dressFileInput.addEventListener('change', () => {
     if (dressFileInput.files.length > 0) {
-      dressFileName.textContent = dressFileInput.files[0].name;
+      const file = dressFileInput.files[0];
+      if (!supportedImageTypes.has(file.type) || file.size > 8 * 1024 * 1024) {
+        dressFileInput.value = '';
+        dressFilePreview.style.display = 'none';
+        showToast('Dress photos must be image files of 8 MB or smaller.', true);
+        return;
+      }
+      dressFileName.textContent = file.name;
       dressFilePreview.style.display = 'block';
     }
   });
@@ -1279,8 +1295,13 @@ if (dressDropZone && dressFileInput) {
 
   dressDropZone.addEventListener('drop', (e) => {
     if (e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (!supportedImageTypes.has(file.type) || file.size > 8 * 1024 * 1024) {
+        showToast('Dress photos must be image files of 8 MB or smaller.', true);
+        return;
+      }
       dressFileInput.files = e.dataTransfer.files;
-      dressFileName.textContent = dressFileInput.files[0].name;
+      dressFileName.textContent = file.name;
       dressFilePreview.style.display = 'block';
     }
   });
@@ -1398,6 +1419,11 @@ if (editDressForm) {
 
     if (!id || !name.trim() || !price) {
       showToast('Please fill in required fields.', true);
+      return;
+    }
+    if (fileInput && fileInput.files[0] &&
+      (!supportedImageTypes.has(fileInput.files[0].type) || fileInput.files[0].size > 8 * 1024 * 1024)) {
+      showToast('Replacement photos must be JPG, PNG, WEBP, or GIF files of 8 MB or smaller.', true);
       return;
     }
 

@@ -5,7 +5,8 @@ const dressSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Dress name is required'],
-      trim: true
+      trim: true,
+      maxlength: [120, 'Dress name must be 120 characters or fewer']
     },
     price: {
       type: Number,
@@ -15,6 +16,7 @@ const dressSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+      maxlength: [1200, 'Dress description must be 1200 characters or fewer'],
       default: ''
     },
     imageUrl: {
@@ -23,6 +25,15 @@ const dressSchema = new mongoose.Schema(
     },
     imagePath: {
       type: String,
+      default: ''
+    },
+    imageData: {
+      type: Buffer,
+      select: false
+    },
+    imageContentType: {
+      type: String,
+      enum: ['', 'image/jpeg', 'image/png', 'image/webp', 'image/gif'],
       default: ''
     },
     isAvailable: {

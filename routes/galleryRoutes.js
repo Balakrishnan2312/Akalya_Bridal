@@ -7,26 +7,19 @@ const mongoose = require('mongoose');
 const GalleryImage = require('../models/GalleryImage');
 const { protectAdmin } = require('../middleware/authMiddleware');
 const { ensureDbConnected } = require('../utils/db');
+const { isSupportedImageBuffer } = require('../utils/imageValidation');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `gallery-${uniqueSuffix}${ext}`);
-  }
-});
+const ALLOWED_CATEGORIES = new Set(['all', 'bridal', 'engagement', 'hair', 'party']);
 
 const upload = multer({
-  storage,
+  // Store the binary in MongoDB so uploads survive server restarts and
+  // deployments that use an ephemeral filesystem.
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|webp|gif/;
@@ -48,30 +41,80 @@ const formatImageObj = (doc) => ({
   cat: doc.category,
   category: doc.category,
   title: doc.title,
-  createdAt: doc.createdAt
+  createdAt: doc.createdAt,
+  updatedAt: doc.updatedAt
 });
 
-const fallbackImages = [
-  { id: "1", _id: "1", img: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=900&auto=format&fit=crop', imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=900&auto=format&fit=crop', cat: 'bridal', category: 'bridal', title: 'Classic Bridal Glam' },
-  { id: "2", _id: "2", img: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=900&auto=format&fit=crop', imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=900&auto=format&fit=crop', cat: 'engagement', category: 'engagement', title: 'Ring Ceremony Glow' },
-  { id: "3", _id: "3", img: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=900&auto=format&fit=crop', imageUrl: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=900&auto=format&fit=crop', cat: 'bridal', category: 'bridal', title: 'Traditional Bridal Look' },
-  { id: "4", _id: "4", img: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?q=80&w=900&auto=format&fit=crop', imageUrl: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?q=80&w=900&auto=format&fit=crop', cat: 'party', category: 'party', title: 'Festive Party Glam' }
-];
+const getLegacyUploadPath = (doc) => {
+  let candidate = '';
+
+  if (doc.imagePath) {
+    const storedPath = path.resolve(doc.imagePath);
+    if (storedPath.startsWith(`${path.resolve(uploadsDir)}${path.sep}`)) {
+      candidate = storedPath;
+    }
+  }
+
+  if (!candidate && doc.imageUrl && doc.imageUrl.includes('/uploads/')) {
+    candidate = path.join(uploadsDir, path.basename(doc.imageUrl));
+  }
+
+  return candidate && fs.existsSync(candidate) ? candidate : '';
+};
 
 // GET /api/gallery & /images - Public get all images
 const getGallery = async (req, res) => {
   try {
     const isConnected = await ensureDbConnected();
     if (!isConnected) {
-      console.warn('[GALLERY] DB offline, serving fallback images');
-      return res.json(fallbackImages);
+      return res.status(503).json({ success: false, message: 'Gallery database is temporarily unavailable.' });
     }
-    const docs = await GalleryImage.find().sort({ createdAt: -1 });
+    const docs = await GalleryImage.find().select('-imageData').sort({ createdAt: -1 });
     const formatted = docs.map(formatImageObj);
-    return res.json(formatted.length > 0 ? formatted : fallbackImages);
+    return res.json(formatted);
   } catch (err) {
-    console.warn('[GALLERY] DB error, serving fallback images:', err.message);
-    return res.json(fallbackImages);
+    console.error('[GALLERY] Database error:', err.message);
+    return res.status(503).json({ success: false, message: 'Gallery database is temporarily unavailable.' });
+  }
+};
+
+// GET /api/gallery/:id/image - Public image stream backed by MongoDB
+const getGalleryImage = async (req, res) => {
+  try {
+    const isConnected = await ensureDbConnected();
+    if (!isConnected) {
+      return res.status(503).json({ success: false, message: 'Gallery database is temporarily unavailable.' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Image not found.' });
+    }
+
+    const doc = await GalleryImage.findById(req.params.id)
+      .select('+imageData imageContentType imageUrl imagePath');
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Image not found.' });
+    }
+
+    if (doc.imageData && doc.imageData.length > 0) {
+      res.set({
+        'Content-Type': doc.imageContentType || 'application/octet-stream',
+        'Content-Length': doc.imageData.length,
+        'Cache-Control': 'public, max-age=86400'
+      });
+      return res.send(doc.imageData);
+    }
+
+    const legacyPath = getLegacyUploadPath(doc);
+    if (legacyPath) {
+      return res.sendFile(legacyPath);
+    }
+
+    return res.status(404).json({ success: false, message: 'Image data not found.' });
+  } catch (err) {
+    console.error('[GALLERY] Error serving image:', err.message);
+    return res.status(500).json({ success: false, message: 'Unable to load image.' });
   }
 };
 
@@ -81,48 +124,50 @@ const uploadImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload an image file.' });
     }
+    if (!isSupportedImageBuffer(req.file.buffer, req.file.mimetype)) {
+      return res.status(400).json({ success: false, message: 'The uploaded file content is not a valid supported image.' });
+    }
 
     // Verify MongoDB connection BEFORE saving document
     const isConnected = await ensureDbConnected();
     if (!isConnected) {
-      if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-        try { fs.unlinkSync(req.file.path); } catch (e) {}
-      }
       console.error('[GALLERY] MongoDB connection unavailable during gallery upload.');
-      return res.status(500).json({
+      return res.status(503).json({
         success: false,
         message: 'Gallery upload failed: Database connection unavailable.'
       });
     }
 
-    const title = req.body.title || 'Studio Photo';
-    const category = req.body.category || 'all';
+    const title = String(req.body.title || 'Studio Photo').trim();
+    const category = String(req.body.category || 'all').trim().toLowerCase();
+    if (title.length > 160) {
+      return res.status(400).json({ success: false, message: 'Image title must be 160 characters or fewer.' });
+    }
+    if (!ALLOWED_CATEGORIES.has(category)) {
+      return res.status(400).json({ success: false, message: 'Please select a valid gallery category.' });
+    }
 
-    const relativeUrlPath = `/uploads/${req.file.filename}`;
-    const host = req.get('host');
-    const protocol = req.protocol;
-    const absoluteUrlPath = `${protocol}://${host}${relativeUrlPath}`;
-
-    const newDoc = await GalleryImage.create({
+    const newDoc = new GalleryImage({
       title,
       category,
-      imageUrl: relativeUrlPath,
-      imagePath: req.file.path
+      imageUrl: 'pending',
+      imagePath: '',
+      imageData: req.file.buffer,
+      imageContentType: req.file.mimetype
     });
+    newDoc.imageUrl = `/api/gallery/${newDoc._id}/image`;
+    await newDoc.save();
 
     console.log(`[GALLERY] Uploaded image: ${newDoc._id} (${title})`);
 
     res.status(201).json({
       success: true,
       message: 'Photo uploaded successfully to the gallery!',
-      imageUrl: absoluteUrlPath,
+      imageUrl: newDoc.imageUrl,
       image: formatImageObj(newDoc)
     });
   } catch (err) {
     console.error('[GALLERY] Exception uploading image:', err.message);
-    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-      try { fs.unlinkSync(req.file.path); } catch (e) {}
-    }
     const isDbErr = err.message && (err.message.includes('buffering') || err.message.includes('connect') || err.name === 'MongooseError');
     const responseMsg = isDbErr ? 'Gallery upload failed: Database connection unavailable.' : (err.message || 'Image upload failed.');
     res.status(500).json({ success: false, message: responseMsg });
@@ -145,8 +190,20 @@ const updateImage = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Image record not found.' });
     }
 
-    if (category) doc.category = category;
-    if (title) doc.title = title;
+    if (category) {
+      const normalizedCategory = String(category).trim().toLowerCase();
+      if (!ALLOWED_CATEGORIES.has(normalizedCategory)) {
+        return res.status(400).json({ success: false, message: 'Please select a valid gallery category.' });
+      }
+      doc.category = normalizedCategory;
+    }
+    if (title) {
+      const normalizedTitle = String(title).trim();
+      if (normalizedTitle.length > 160) {
+        return res.status(400).json({ success: false, message: 'Image title must be 160 characters or fewer.' });
+      }
+      doc.title = normalizedTitle;
+    }
 
     await doc.save();
     console.log(`[GALLERY] Updated image ${id}: category=${doc.category}`);
@@ -171,74 +228,26 @@ const deleteImage = async (req, res) => {
     }
 
     const { id } = req.params;
-    let doc = null;
-
-    // 1. Check if ID is a valid Mongoose ObjectId before calling findById
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      doc = await GalleryImage.findById(id);
-    }
-
-    // 2. If not found by ObjectId, try finding by matching imageUrl
-    if (!doc) {
-      try {
-        doc = await GalleryImage.findOne({
-          $or: [
-            { imageUrl: id },
-            { imageUrl: { $regex: id, $options: 'i' } }
-          ]
-        });
-      } catch (findErr) {
-        doc = null;
-      }
-    }
-
-    // 3. Clean up legacy images.json file if present
-    const imagesJsonPath = path.join(__dirname, '..', 'images.json');
-    let deletedFromLegacy = false;
-    if (fs.existsSync(imagesJsonPath)) {
-      try {
-        const fileData = fs.readFileSync(imagesJsonPath, 'utf8');
-        let parsed = JSON.parse(fileData);
-        if (Array.isArray(parsed)) {
-          const originalLen = parsed.length;
-          parsed = parsed.filter(img => img.id !== id && img._id !== id && !img.img?.includes(id));
-          if (parsed.length < originalLen) {
-            fs.writeFileSync(imagesJsonPath, JSON.stringify(parsed, null, 2));
-            deletedFromLegacy = true;
-            console.log(`[GALLERY] Removed image ID ${id} from images.json`);
-          }
-        }
-      } catch (e) {
-        console.warn(`[GALLERY] Could not update images.json: ${e.message}`);
-      }
-    }
-
-    if (!doc && !deletedFromLegacy) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(404).json({ success: false, message: 'Image record not found.' });
     }
 
-    // 4. Safely delete physical file if image document was found
-    if (doc) {
-      let targetFilePath = null;
-      if (doc.imagePath && fs.existsSync(doc.imagePath)) {
-        targetFilePath = doc.imagePath;
-      } else if (doc.imageUrl && doc.imageUrl.includes('/uploads/')) {
-        const filename = path.basename(doc.imageUrl);
-        targetFilePath = path.join(uploadsDir, filename);
-      }
-
-      if (targetFilePath && fs.existsSync(targetFilePath)) {
-        try {
-          fs.unlinkSync(targetFilePath);
-          console.log(`[GALLERY] Deleted file at ${targetFilePath}`);
-        } catch (e) {
-          console.warn(`[GALLERY] Failed to delete file at ${targetFilePath}: ${e.message}`);
-        }
-      }
-
-      await GalleryImage.findByIdAndDelete(doc._id);
-      console.log(`[GALLERY] Deleted MongoDB gallery record ID: ${doc._id}`);
+    const doc = await GalleryImage.findById(id).select('+imageData');
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Image record not found.' });
     }
+
+    const legacyPath = getLegacyUploadPath(doc);
+    await GalleryImage.findByIdAndDelete(doc._id);
+
+    if (legacyPath) {
+      try {
+        fs.unlinkSync(legacyPath);
+      } catch (e) {
+        console.warn(`[GALLERY] Failed to delete legacy file: ${e.message}`);
+      }
+    }
+    console.log(`[GALLERY] Deleted MongoDB gallery record ID: ${doc._id}`);
 
     return res.json({
       success: true,
@@ -251,6 +260,7 @@ const deleteImage = async (req, res) => {
 };
 
 router.get('/', getGallery);
+router.get('/:id/image', getGalleryImage);
 
 router.post('/', protectAdmin, (req, res, next) => {
   upload.single('image')(req, res, (err) => {
@@ -267,6 +277,7 @@ router.delete('/:id', protectAdmin, deleteImage);
 module.exports = {
   router,
   getGallery,
+  getGalleryImage,
   uploadImage,
   updateImage,
   deleteImage,

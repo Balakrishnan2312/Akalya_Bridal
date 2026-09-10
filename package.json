@@ -1,7 +1,16 @@
 {
+  "name": "akalya-bridal-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Database-backed website and admin dashboard for Akalya's Bridal Studio.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check main.js && node --check admin.js && node --check boutique.js && node --check routes/galleryRoutes.js && node --check routes/dressRoutes.js && node --check routes/authRoutes.js && node --check utils/imageValidation.js",
+    "test": "node --test"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -10,6 +19,6 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
-    "multer": "^2.2.0"
+    "multer": "^2.3.0"
   }
 }

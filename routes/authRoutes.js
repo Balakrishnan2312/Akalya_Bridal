@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const mongoose = require('mongoose');
 const Admin = require('../models/Admin');
+const { ensureDbConnected } = require('../utils/db');
 
 const handleLogin = async (req, res) => {
   try {
@@ -16,45 +16,34 @@ const handleLogin = async (req, res) => {
       });
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const envEmail = (process.env.ADMIN_EMAIL || 'admin@akalyasbridal.com').toLowerCase();
-    const envPassword = process.env.ADMIN_PASSWORD || 'ChangeThisStrongPassword';
-
-    let isMatch = false;
-    let adminPayload = { email: normalizedEmail, name: process.env.ADMIN_NAME || 'Akalya Admin', role: 'admin' };
-
-    const isEnvEmailMatch = normalizedEmail === envEmail || normalizedEmail === 'admin@akalyasbridal.com' || normalizedEmail === 'akalya@bridal.com';
-    const isEnvPassMatch = password === envPassword || password === 'admin123' || password === 'Akalya12' || password === 'ChangeThisStrongPassword';
-
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const admin = await Admin.findOne({ email: normalizedEmail });
-        if (admin) {
-          isMatch = await bcrypt.compare(password, admin.password);
-          adminPayload = { id: admin._id, email: admin.email, name: admin.name, role: admin.role };
-        } else if (isEnvEmailMatch && isEnvPassMatch) {
-          isMatch = true;
-        }
-      } catch (dbErr) {
-        if (isEnvEmailMatch && isEnvPassMatch) {
-          isMatch = true;
-        }
-      }
-    } else {
-      if (isEnvEmailMatch && isEnvPassMatch) {
-        isMatch = true;
-      }
+    if (!(await ensureDbConnected())) {
+      return res.status(503).json({
+        success: false,
+        message: 'Admin login is unavailable while the database is offline.'
+      });
     }
 
-    if (!isMatch) {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(503).json({
+        success: false,
+        message: 'Admin authentication is not configured on the server.'
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const admin = await Admin.findOne({ email: normalizedEmail }).select('+password');
+    const isMatch = admin ? await bcrypt.compare(String(password), admin.password) : false;
+
+    if (!admin || !isMatch) {
       return res.status(401).json({
         success: false,
         message: 'Invalid admin credentials.'
       });
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'akalyas_bridal_studio_super_secret_key_123';
     const expiresIn = process.env.JWT_EXPIRES_IN || '12h';
+    const adminPayload = { id: admin._id, email: admin.email, name: admin.name, role: admin.role };
 
     const token = jwt.sign(adminPayload, jwtSecret, { expiresIn });
 

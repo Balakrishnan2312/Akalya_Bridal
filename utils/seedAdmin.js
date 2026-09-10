@@ -7,25 +7,37 @@ const StoreSettings = require('../models/StoreSettings');
 
 const seedAdmin = async () => {
   try {
-    const adminCount = await Admin.countDocuments();
-    if (adminCount === 0) {
-      const name = process.env.ADMIN_NAME || 'Akalya Admin';
-      const email = process.env.ADMIN_EMAIL || 'admin@akalyasbridal.com';
-      const rawPassword = process.env.ADMIN_PASSWORD || 'ChangeThisStrongPassword';
+    const name = process.env.ADMIN_NAME || 'Akalya Admin';
+    const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    const rawPassword = String(process.env.ADMIN_PASSWORD || '');
 
+    if (!email || !rawPassword) {
+      console.warn('[SEED] ADMIN_EMAIL and ADMIN_PASSWORD are required before an admin can log in.');
+      return false;
+    }
+
+    if (rawPassword.length < 12) {
+      console.warn('[SEED] ADMIN_PASSWORD must contain at least 12 characters. Admin was not created.');
+      return false;
+    }
+
+    const existingAdmin = await Admin.findOne({ email });
+    if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
       await Admin.create({
         name,
-        email: email.toLowerCase(),
+        email,
         password: hashedPassword,
         role: 'admin'
       });
       console.log(`[SEED] Created default admin user: ${email}`);
     } else {
-      console.log('[SEED] Admin user already exists in database.');
+      console.log(`[SEED] Admin user already exists: ${email}`);
     }
+    return true;
   } catch (err) {
     console.error(`[SEED] Error seeding admin user: ${err.message}`);
+    return false;
   }
 };
 

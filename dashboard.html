@@ -1123,7 +1123,7 @@
         <form id="upload-form">
           <div class="form-group">
             <label for="title">Photo Title / Caption</label>
-            <input type="text" id="title" placeholder="e.g. Classic Silk Lehenga, Glam Look" required>
+            <input type="text" id="title" maxlength="160" placeholder="e.g. Classic Silk Lehenga, Glam Look" required>
           </div>
           
           <div class="form-group">
@@ -1142,7 +1142,7 @@
             <div class="drop-zone" id="drop-zone">
               <i class="bx bx-cloud-upload"></i>
               <span class="drop-zone-text">Drag & drop photo here or <b style="color: var(--rosegold);">click to browse</b></span>
-              <input type="file" id="file-input" accept="image/*" required>
+              <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/gif" required>
             </div>
             <div class="file-preview" id="file-preview">Selected: <span id="file-name"></span></div>
           </div>
@@ -1170,7 +1170,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group" style="grid-column: span 1;">
               <label for="dress-name">Dress Name <span style="color: var(--danger);">*</span></label>
-              <input type="text" id="dress-name" placeholder="e.g. Royal Silk Lehenga, Velvet Gown" required>
+              <input type="text" id="dress-name" maxlength="120" placeholder="e.g. Royal Silk Lehenga, Velvet Gown" required>
             </div>
             
             <div class="form-group" style="grid-column: span 1;">
@@ -1181,7 +1181,7 @@
           
           <div class="form-group">
             <label for="dress-description">Short Description (Optional)</label>
-            <textarea id="dress-description" rows="2" placeholder="e.g. Handcrafted zardosi embroidery on pure raw silk fabric, includes dupatta and blouse piece."></textarea>
+            <textarea id="dress-description" rows="2" maxlength="1200" placeholder="e.g. Handcrafted zardosi embroidery on pure raw silk fabric, includes dupatta and blouse piece."></textarea>
           </div>
           
           <div class="form-group">
@@ -1189,7 +1189,7 @@
             <div class="drop-zone" id="dress-drop-zone">
               <i class="bx bx-cloud-upload"></i>
               <span class="drop-zone-text">Drag & drop dress photo here or <b style="color: var(--rosegold);">click to browse</b></span>
-              <input type="file" id="dress-file-input" accept="image/*" required>
+              <input type="file" id="dress-file-input" accept="image/jpeg,image/png,image/webp,image/gif" required>
             </div>
             <div class="file-preview" id="dress-file-preview">Selected: <span id="dress-file-name"></span></div>
           </div>
@@ -1264,7 +1264,7 @@
           
           <div class="form-group">
             <label for="edit-dress-name">Dress Name <span style="color: var(--danger);">*</span></label>
-            <input type="text" id="edit-dress-name" required>
+            <input type="text" id="edit-dress-name" maxlength="120" required>
           </div>
           
           <div class="form-group">
@@ -1274,7 +1274,7 @@
           
           <div class="form-group">
             <label for="edit-dress-description">Short Description</label>
-            <textarea id="edit-dress-description" rows="3"></textarea>
+            <textarea id="edit-dress-description" rows="3" maxlength="1200"></textarea>
           </div>
 
           <div class="form-group">
@@ -1287,7 +1287,7 @@
           
           <div class="form-group">
             <label for="edit-dress-file-input">Replace Image (Optional)</label>
-            <input type="file" id="edit-dress-file-input" accept="image/*" class="time-input" style="padding: 8px;">
+            <input type="file" id="edit-dress-file-input" accept="image/jpeg,image/png,image/webp,image/gif" class="time-input" style="padding: 8px;">
           </div>
         </div>
         
@@ -1303,6 +1303,7 @@
   
   <div class="toast" id="toast">Notification</div>
 
+  <script src="config.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

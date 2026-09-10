@@ -9,7 +9,7 @@ const notFound = (req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  const statusCode = err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
   console.error(`[ERROR] Handler caught exception on ${req.method} ${req.url}:`, err.message);
 
   res.status(statusCode).json({

@@ -221,6 +221,119 @@
       transform: scale(1.03);
     }
 
+    /* Database-backed dress collection */
+    .collection-section {
+      padding: 72px 0 10px;
+    }
+
+    .collection-heading {
+      max-width: 680px;
+      margin: 0 auto 38px;
+      text-align: center;
+    }
+
+    .collection-kicker {
+      color: var(--gold-primary);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .collection-heading h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 12px;
+    }
+
+    .collection-heading p,
+    .collection-state {
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+      gap: 24px;
+    }
+
+    .collection-card {
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      border-radius: 22px;
+      background: var(--bg-card);
+      transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    }
+
+    .collection-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--border-gold);
+      background: var(--bg-card-hover);
+    }
+
+    .collection-image {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      background: #1b1b20;
+    }
+
+    .collection-card-body {
+      padding: 20px;
+    }
+
+    .collection-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.18rem;
+      margin-bottom: 8px;
+    }
+
+    .collection-price {
+      display: block;
+      color: var(--gold-light);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .collection-description {
+      min-height: 60px;
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+
+    .collection-inquire {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px 16px;
+      border: 1px solid var(--border-gold);
+      border-radius: 999px;
+      color: var(--gold-light);
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .collection-inquire:hover {
+      background: var(--gold-gradient);
+      color: #0d0d0f;
+    }
+
+    .collection-state {
+      grid-column: 1 / -1;
+      padding: 48px 20px;
+      border: 1px dashed var(--border-subtle);
+      border-radius: 20px;
+      text-align: center;
+    }
+
     /* CTA Section */
     .cta-block {
       margin-top: 90px;
@@ -364,6 +477,18 @@
       </div>
     </section>
 
+    <!-- Collection items are loaded from MongoDB through the Express API. -->
+    <section class="collection-section" id="collection">
+      <div class="collection-heading">
+        <p class="collection-kicker">Available in our studio</p>
+        <h2>Bridal Dress Collection</h2>
+        <p>Browse the latest dresses published by the studio. Contact us to confirm sizing, customisation, and availability.</p>
+      </div>
+      <div class="collection-grid" id="boutique-dress-grid" aria-live="polite">
+        <div class="collection-state"><i class="bx bx-loader-alt bx-spin"></i> Loading the collection…</div>
+      </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta-block">
       <h2>Explore Our Boutique Collection</h2>
@@ -378,6 +503,8 @@
       </div>
     </section>
   </div>
+  <script src="config.js"></script>
+  <script src="boutique.js"></script>
 </body>
 
 </html>
